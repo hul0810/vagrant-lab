@@ -1,0 +1,22 @@
+---
+- hosts: nodes
+  #gather_facts: no
+
+  tasks:
+  - name: create id_rsa.pub
+    shell: ssh-keygen -b 2048 -t rsa -f ~/.ssh/id_rsa -q -N ""
+    connection: local
+    ignore_errors: yes
+    run_once: true
+  
+  - name: Set authorized key taken from file
+    authorized_key:
+      user: vagrant
+      state: present
+      key: "{{ lookup('file', '/home/vagrant/.ssh/id_rsa.pub') }}"
+
+  - name: CentOS chmod authorized_keys file
+    file:
+      path: /home/vagrant/.ssh/authorized_keys
+      mode: 0600
+    when: ansible_distribution == 'CentOS'

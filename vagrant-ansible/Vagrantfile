@@ -1,0 +1,100 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# All Vagrant configuration is done below. The "2" in Vagrant.configure
+# configures the configuration version (we support older styles for
+# backwards compatibility). Please don't change it unless you know what
+# you're doing.
+
+Vagrant.configure("2") do |config|
+
+  # ------- #
+  # CentOS7 #
+  # ------- #
+  
+  # Ansible-Node01
+  config.vm.define:"ansible-node01" do |cfg|
+    cfg.ssh.insert_key = false
+    cfg.vm.box = "centos/7"
+	cfg.vm.provider "virtualbox" do |vb|
+	  vb.name = "Ansible-Node01"
+	  vb.memory = "512"
+	  vb.cpus = "1"
+	  if !File.exist?("D:/VirtualBox VMs/Ansible-Node01/centos-7-1-2.x86_64.vmdk") # 파일 경로는 환경에 맞춰서 설정한다.
+	    vb.customize ['createhd', '--filename', "D:/VirtualBox VMs/Ansible-Node01/centos-7-1-2.x86_64.vmdk", '--size', 50 * 1024]
+	    vb.customize ['storageattach', :id, '--storagectl', 'IDE', '--port', 1, '--device', 0, '--type', 'hdd', '--medium', "D:/virtualbox/Ansible-Node01/centos-7-1-2.x86_64.vmdk"]
+	  end
+	end
+	cfg.vm.hostname = "ansible-node01"
+	cfg.vm.synced_folder ".", "/vagrant", disabled: true
+	cfg.vm.network "public_network", ip: "192.168.0.101", hostname: true
+	cfg.vm.network "forwarded_port", guest: 22, host: 20101, auto_correct: false, id: "ssh"
+	cfg.vm.provision "shell", path: "./modify_sshd_config.sh"
+  end
+  
+  # Ansible-Node02"
+  config.vm.define:"ansible-node02" do |cfg|
+    cfg.ssh.insert_key = false
+    cfg.vm.box = "centos/7"
+	cfg.vm.provider "virtualbox" do |vb|
+	  vb.name = "Ansible-Node02"
+	  vb.memory = "512"
+	  vb.cpus = "1"
+	end
+	cfg.vm.hostname = "ansible-node02"
+	cfg.vm.synced_folder ".", "/vagrant", disabled: true
+	cfg.vm.network "public_network", ip: "192.168.0.102", hostname: true
+	cfg.vm.network "forwarded_port", guest: 22, host: 20102, auto_correct: false, id: "ssh"
+	cfg.vm.provision "shell", path: "./modify_sshd_config.sh"
+  end
+  
+  # ------ #
+  # Ubuntu #
+  # ------ #
+  
+  # Ansible-Node03
+  config.vm.define:"ansible-node03" do |cfg|
+    cfg.ssh.insert_key = false
+    cfg.vm.box = "ubuntu/bionic64"
+	cfg.vm.provider "virtualbox" do |vb|
+	  vb.name = "Ansible-Node03"
+	  vb.memory = "512"
+	  vb.cpus = "1"
+	end
+	cfg.vm.hostname = "ansible-node03"
+	cfg.vm.synced_folder ".", "/vagrant", disabled: true
+	cfg.vm.network "public_network", ip: "192.168.0.103", hostname: true
+	cfg.vm.network "forwarded_port", guest: 22, host: 20103, auto_correct: false, id: "ssh"
+	cfg.vm.provision "shell", path: "./modify_sshd_config.sh"
+	cfg.vm.provision "shell", path: "./ubuntu_install_python.sh"
+  end
+  
+  ##################
+  # Ansible-Server #
+  ##################
+  config.vm.define:"ansible-server" do |cfg|
+    cfg.vm.box = "centos/7"
+    cfg.vm.provider "virtualbox" do |vb|
+	  vb.name = "Ansible-Server"
+	  # vb.customize ["modifyvm", :id, "--cpus", 2]
+	  # vb.customize ["modifyvm", :id, "--memory", 2048]
+	  vb.memory = 2048
+	  vb.cpus = 2
+	end
+	# cfg.disksize.size = "60GB"
+	# cfg.vm.disk :disk, size: "60GB", primary: true (안됨)
+    cfg.vm.hostname = "ansible-server"
+	cfg.vm.synced_folder ".", "/vagrant", disabled: true
+	cfg.vm.network "public_network", ip: "192.168.0.100" #, hostname: true
+	cfg.vm.network "forwarded_port", guest: 22, host: 20100, auto_correct: false, id: "ssh"
+	cfg.vm.provision "shell", path: "./bootstrap.sh"
+	cfg.vm.provision "file", source: "./Ansible_env_ready.yml", destination: "./Ansible_env_ready.yml"
+	cfg.vm.provision "shell", inline: "ansible-playbook Ansible_env_ready.yml"
+	cfg.vm.provision "file", source:"./auto_known_hosts.yml", destination: "./auto_known_hosts.yml"
+	cfg.vm.provision "shell", inline: "ansible-playbook auto_known_hosts.yml", privileged: false
+	cfg.vm.provision "file", source: "./auto_authorized_keys.yml", destination: "./auto_authorized_keys.yml"
+	cfg.vm.provision "shell", inline: "ansible-playbook auto_authorized_keys.yml --extra-vars 'ansible_ssh_pass=vagrant'", privileged: false
+	cfg.vm.provision "shell", path: "./modify_sshd_config.sh"
+	# cfg.vm.provision "shell", path: "./add_ssh_auth.sh", privileged: false
+  end
+end
