@@ -4,6 +4,7 @@ NETWORK_SUB = "192.168.0." # 각 환경에 맞게 설정
 START_IP = 150 # 각 환경에 맞게 설정
 K8S_MINOR_VERSION = 23 # 쿠버네티스 버전 선택
 VM_GROUP_NAME = "k8s-1.#{K8S_MINOR_VERSION}.4-0"
+POD_CIDR = "10.#{K8S_MINOR_VERSION}.0.0/16"
 
 cluster = {
   "master" => { :cpus => 2, :mem => 2048 }, # 각 환경에 맞게 설정
@@ -39,7 +40,7 @@ Vagrant.configure("2") do |config|
 	master.vm.provision "shell", inline: <<-SHELL
 	  sudo rm /vagrant/join.sh
 	  sudo rm ~/.kube/config
-	  sudo kubeadm init --apiserver-advertise-address=#{NETWORK_SUB}#{START_IP}
+	  sudo kubeadm init --apiserver-advertise-address=#{NETWORK_SUB}#{START_IP} --pod-network-cidr=#{POD_CIDR}
 	  sudo kubeadm token create --print-join-command > /vagrant/join.sh
 	  chmod u+x /vagrant/join.sh
 	  mkdir -p $HOME/.kube # vagrant는 default로 sudo를 사용해서 문제되지 않는듯
@@ -70,6 +71,11 @@ Vagrant.configure("2") do |config|
 	  node.vm.provision "shell", inline: <<-SHELL
 	    sudo /vagrant/join.sh
 	  SHELL
+	  node.vm.provision "shell-1", type: "shell", privileged: true, inline: <<-SHELL
+        sudo echo 'KUBELET_EXTRA_ARGS=--node-ip=#{NETWORK_SUB}#{i + START_IP}' > /etc/sysconfig/kubelet
+        sudo systemctl daemon-reload
+        sudo systemctl restart kubelet
+      SHELL
 	end
   end
 end
