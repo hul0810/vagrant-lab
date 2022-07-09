@@ -1,7 +1,15 @@
+sudo sudo apt-add-repository -y ppa:ansible/ansible
 sudo apt-get update
 
 # packages install
-sudo apt-get install -y vim git net-tools jq sshpass
+# ubuntu 18.04 must install pass and gnupg2 for prevent dbus error but v20.04 unnecessary.
+sudo apt-get install -y vim git net-tools jq sshpass pass gnupg2 python3-pip
+
+# python package install
+# These tasks are for ubuntu 18.04 but v20.04 unnecessary.
+sudo pip3 install --upgrade pip
+sudo pip3 install setuptools_rust docker websocket docker-compose
+
 
 # Install Ansible
 sudo apt install -y ansible
