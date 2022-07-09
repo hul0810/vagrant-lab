@@ -1,0 +1,45 @@
+---
+- name: Set up environment configuration
+  hosts: localhost
+  gather_facts: no
+  
+  tasks:
+  - name: Add "/etc/hosts"
+    blockinfile:
+      path: /etc/hosts
+      block: |
+        192.168.56.180 awxtower
+        192.168.56.181 awxnode-1
+        192.168.56.182 awxnode-2
+        192.168.56.183 awxnode-3
+        192.168.56.184 awxnode-4
+        
+        
+  - name: Add "/etc/ansible/hosts"
+    blockinfile:
+      path: /etc/ansible/hosts
+      block: |
+        [nodes]
+        awxnode-1
+        awxnode-2
+        awxnode-3
+        awxnode-4
+        
+        [Ubuntu]
+        awxnode-1
+        awxnode-2
+        
+        [CentOS]
+        awxnode-3
+        awxnode-4
+  
+  - name: configure ".bashrc"
+    lineinfile:
+      path: /home/vagrant/.bashrc
+      line: "{{ item }}"
+    with_items:
+    - "alias vi='vim'"
+    - "alias ans='ansible'"
+    - "alias anp='ansible-playbook'"
+    
+  
