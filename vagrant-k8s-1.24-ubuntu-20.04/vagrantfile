@@ -47,8 +47,8 @@ Vagrant.configure("2") do |config|
       echo 'alias k=kubectl' >>~/.bashrc
     SHELL
 
-    master.vm.provision "file", preserve_order: true, source: "files", destination: "/tmp"
-    master.vm.provision "3", type: "shell", preserve_order: true, privileged: true, path: "scripts/pv.sh"
+    #master.vm.provision "file", preserve_order: true, source: "files", destination: "/tmp"
+    #master.vm.provision "3", type: "shell", preserve_order: true, privileged: true, path: "scripts/pv.sh"
 
     master.vm.provider "virtualbox" do |v|
       v.name = "#{VM_GROUP_NAME}-master"
