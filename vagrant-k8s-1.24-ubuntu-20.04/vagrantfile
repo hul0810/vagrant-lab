@@ -45,6 +45,7 @@ Vagrant.configure("2") do |config|
       kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
       kubectl completion bash >/etc/bash_completion.d/kubect
       echo 'alias k=kubectl' >>~/.bashrc
+      echo 'complete -o default -F __start_kubectl k' >>~/.bashrc
     SHELL
 
     #master.vm.provision "file", preserve_order: true, source: "files", destination: "/tmp"
